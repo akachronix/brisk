@@ -1,23 +1,15 @@
 CC=g++
-CXXFLAGS=-O2 -std=c++17 -Wall -pedantic 
-CXXLDFLAGS=
-CXXSTD=
-
+CXXFLAGS=-O2 -std=c++20 -Wall -pedantic 
 BINDIR=bin
 INCLUDEDIR=include
-LIBDIR=lib
-OBJDIR=obj
 SRCDIR=src
 
-TARGET=brisk
-
 .PHONY: clean
+all: vector_benchmark
 
-all: $(TARGET)
-
-$(TARGET): clean src/test.cpp
+vector_benchmark: clean src/vector_benchmark.cpp
 	mkdir $(BINDIR)
-	$(CC) -I$(INCLUDEDIR) -L$(LIBDIR) $(CXXFLAGS) $(word 2, $^) -o $(BINDIR)/$(TARGET) $(CXXLDFLAGS)
+	$(CC) -I$(INCLUDEDIR) $(CXXFLAGS) $(word 2, $^) -o $(BINDIR)/$@ $(CXXLDFLAGS)
 
 clean:
 	rm -rf $(BINDIR) $(OBJDIR) *.log build/

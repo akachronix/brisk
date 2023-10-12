@@ -1,12 +1,12 @@
 #pragma once
 
+#include "vector.hpp"
+#include "utility.hpp"
+
 #include <iostream>
 #include <sstream>
 #include <fstream>
 #include <string>
-#include <vector>
-
-#include "utility.hpp"
 
 namespace brisk
 {
@@ -101,11 +101,11 @@ namespace brisk
 			if (m_logLevel >= loglevel::errors)
 			{
 				std::string message = "[ERROR] " + error_str + "\n";
-				
-				if (m_amIPrinting)
+				if (m_amIPrinting) {
 					std::cout << message;
-
+				}
 				logHistory.push_back(message);
+				
 				return true;
 			}
 
@@ -117,9 +117,9 @@ namespace brisk
 			if (m_logLevel >= loglevel::warnings)
 			{
 				std::string message = "[WARNING] " + warning_str + "\n";
-
-				if (m_amIPrinting)
+				if (m_amIPrinting) {
 					std::cout << message;
+				}
 
 				logHistory.push_back(message);
 				return true;
@@ -135,11 +135,11 @@ namespace brisk
 			{
 				std::stringstream casted_value;
 				casted_value << value;
-
-				if (m_amIPrinting)
+				if (m_amIPrinting) {
 					std::cout << value;
-
+				}
 				logHistory.push_back(casted_value.str());
+
 				return true;
 			}
 
@@ -161,13 +161,12 @@ namespace brisk
 		void input(T& var)
 		{
 			std::cin >> var;
-
 			std::stringstream varToString;
 			varToString << var << "\n";
 			logHistory.push_back(varToString.str());
 		}
 
-		std::vector<std::string>& buffer() noexcept
+		const brisk::vector<std::string>& buffer() const noexcept
 		{
 			return logHistory;
 		}
@@ -175,17 +174,19 @@ namespace brisk
 		size_t size() noexcept
 		{
 			size_t sz = 0;
-			for (auto& it : logHistory)
+			for (std::string& it : logHistory) {
 				sz += it.size() + sizeof(std::string);
-			
+			}
+
 			return sz;
 		}
 
 		void shrink_to_fit()
 		{
 			std::string s = "";
-			for (auto& it : logHistory)
-				s.append(it); 
+			for (std::string& it : logHistory) {
+				s.append(it);
+			}
 			
 			logHistory.erase(logHistory.begin(), logHistory.end());
 			logHistory.emplace_back(s);
@@ -199,8 +200,9 @@ namespace brisk
 				std::ofstream log_file(file);
 				if (log_file.is_open())
 				{
-					for (auto x : logHistory)
+					for (std::string& x : logHistory) {
 						log_file << x;
+					}
 
 					log_file.close();
 					return true;
@@ -236,7 +238,7 @@ namespace brisk
 		}
 
 	private:
-		std::vector<std::string> logHistory;
+		brisk::vector<std::string> logHistory;
 		loglevel m_logLevel;
 		std::string m_logFile;
 		bool m_amILogging;

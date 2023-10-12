@@ -36,8 +36,8 @@ namespace brisk
 		explicit vector(const size_type size)
 		{
 			m_elements = 0;
-			m_size = size << 2;
-			m_array = new Type[m_size];
+			m_size = size;
+			m_array = new Type[size];
 		}
 		
 		vector(const std::initializer_list<Type> list)
@@ -45,8 +45,7 @@ namespace brisk
 			m_elements = list.size();
 			m_size = list.size() << 2;
 			m_array = new Type[m_size];
-
-			for (auto it = list.begin(); it != list.end(); ++it) {
+			for (typename std::initializer_list<Type>::iterator it = list.begin(); it != list.end(); ++it) {
 				m_array[it - list.begin()] = *(it);
 			}
 		}
@@ -57,7 +56,7 @@ namespace brisk
 			m_size = 0;
             
 			for (iterator it = begin; it != end; ++it) {
-				++m_elements;
+				m_elements++;
 			}
 			
 			m_size = m_elements << 2;
@@ -72,7 +71,9 @@ namespace brisk
 			m_elements = v2.m_elements;
 			m_size = v2.m_size;
 			m_array = new Type[m_size];
-			memcpy(m_array, v2.m_array, v2.m_elements * sizeof(Type));
+			for (size_type i = 0; i < v2.m_size; i++) {
+				m_array[i] = v2.m_array[i];
+			}
 		}
 
 		vector(vector&& v2)
@@ -95,7 +96,10 @@ namespace brisk
 			m_elements = v2.m_elements;
 			m_size = v2.m_size;
 			m_array = new Type[m_size];
-			memcpy(m_array, v2.m_array, v2.m_elements * sizeof(Type));		
+			for (size_type i = 0; i < v2.m_size; i++) {
+				m_array[i] = v2.m_array[i];
+			}
+
 			return *this;
 		}
 
@@ -107,6 +111,7 @@ namespace brisk
 			v2.m_elements = 0;
 			v2.m_size = 0;
 			v2.m_array = nullptr;
+
 			return *this;
 		}
 
@@ -171,18 +176,8 @@ namespace brisk
 		template <class... Args>
 		void emplace_back(Args&&... args)
 		{
-			if (m_elements == m_size)
-			{
-				size_type old_m_size = m_size;
-				m_size <<= 2;
-
-				Type* buffer = new Type[m_size];
-				for (size_type i = 0; i < old_m_size; ++i) {
-					buffer[i] = brisk::move(m_array[i]);
-				}
-
-				delete[] m_array;
-				m_array = buffer;
+			if (m_elements == m_size) {
+				realloc(m_size << 2);
 			}
 
 			m_array[m_elements] = brisk::move(Type(brisk::forward<Args>(args)...));
@@ -191,15 +186,10 @@ namespace brisk
 		
 		void push_back(const std::initializer_list<Type>&& list)
 		{
-			for (auto it = list.begin(); it != list.end(); ++it)
+			for (typename std::initializer_list<Type>::const_iterator it = list.begin(); it != list.end(); ++it)
 			{
-				if (m_elements == m_size)
-				{
-					m_size <<= 2;
-					Type* buffer = new Type[m_size];
-					memcpy(buffer, m_array, m_elements * sizeof(Type));
-					delete[] m_array;
-					m_array = buffer;
+				if (m_elements == m_size) {
+					realloc(m_size << 2);
 				}
 
 				m_array[m_elements] = *(it);
@@ -209,18 +199,8 @@ namespace brisk
 
 		void push_back(const Type& value)
 		{
-			if (m_elements == m_size)
-			{
-				size_type old_m_size = m_size;
-				m_size <<= 2;
-
-				Type* buffer = new Type[m_size];
-				for (size_type i = 0; i < old_m_size; ++i) {
-					buffer[i] = brisk::move(m_array[i]);
-				}
-
-				delete[] m_array;
-				m_array = buffer;
+			if (m_elements == m_size) {
+				realloc(m_size << 2);
 			}
 
 			m_array[m_elements] = value;
@@ -229,18 +209,8 @@ namespace brisk
 
 		void push_back(const Type&& value)
 		{
-			if (m_elements == m_size)
-			{
-				size_type old_m_size = m_size;
-				m_size <<= 2;
-
-				Type* buffer = new Type[m_size];
-				for (size_type i = 0; i < old_m_size; ++i) {
-					buffer[i] = brisk::move(m_array[i]);
-				}
-
-				delete[] m_array;
-				m_array = buffer;
+			if (m_elements == m_size) {
+				realloc(m_size << 2);
 			}
 
 			m_array[m_elements] = brisk::move(value);
@@ -249,8 +219,8 @@ namespace brisk
 
 		void pop_back()
 		{
-			--m_elements;
 			m_array[m_elements].~Type();
+			--m_elements;
 		}
 
 		size_type capacity() const noexcept
@@ -274,61 +244,30 @@ namespace brisk
 		}
 
 		void resize(const size_type size)
-		{		
-			if (size > m_size)
-			{
-				size_type old_m_size = m_size;
-				m_size = size;
-
-				Type* buffer = new Type[m_size];
-				for (size_type i = 0; i < old_m_size; ++i) {
-					buffer[i] = brisk::move(m_array[i]);
-				}
-
-				delete[] m_array;
-				m_array = buffer;
-			}
-
-			m_elements = size;
+		{
+			realloc(size);
 		}
 
 		void reserve(const size_type size)
 		{
-			if (size > m_size)
-			{
-				size_type old_m_size = m_size;
-				m_size = size;
-				
-				Type* buffer = new Type[m_size];
-				for (size_type i = 0; i < old_m_size; ++i) {
-					buffer[i] = brisk::move(m_array[i]);
-				}
-
-				delete[] m_array;
-				m_array = buffer;
+			if (size > m_size) {
+				realloc(size);
 			}
 		}
 
 		void shrink_to_fit()
 		{
-			m_size = m_elements;
-			Type* buffer = new Type[m_size];
-			for (size_type i = 0; i < m_size; ++i) {
-				buffer[i] = brisk::move(m_array[i]);
-			}
-
-			delete[] m_array;
-			m_array = buffer;
+			realloc(m_elements);
 		}
 
-		void fill(const value_type& value)
+		void fill(const value_type& value) noexcept
 		{
 			for (size_type i = 0; i < m_elements; ++i) {
 				m_array[i] = value;
 			}
 		}
 
-		bool operator==(const vector<Type>& rhs) const
+		bool operator==(const vector<Type>& rhs) const noexcept
 		{
 			if (m_elements != rhs.m_elements) {
 				return false;
@@ -344,7 +283,7 @@ namespace brisk
 			return true;
 		}
 
-		bool operator!=(const vector<Type>& rhs) const
+		bool operator!=(const vector<Type>& rhs) const noexcept
 		{
 			if (m_elements != rhs.m_elements) {
 				return true;
@@ -436,6 +375,34 @@ namespace brisk
 		}
 
 	private:
+		void realloc(const size_t newSize)
+		{
+			Type* buffer = new Type[newSize];
+			
+			// If newSize is > current size, we move every object to new buffer
+			if (newSize > m_size) 
+			{
+				for (size_type i = 0; i < m_size; ++i) {
+					buffer[i] = brisk::move(m_array[i]);
+				}
+			} 
+			
+			// However, if newSize is < current size, we only copy up to 
+			// specified index because it's already getting thrown out anyways
+			else 
+			{
+				for (size_type i = 0; i < newSize; ++i) {
+					buffer[i] = brisk::move(m_array[i]);
+				}
+
+				m_elements = newSize;
+			}
+
+			delete[] m_array;
+			m_array = buffer;
+			m_size = newSize;
+		}
+
 		size_type m_elements;
 		size_type m_size;
 		value_type* m_array;
