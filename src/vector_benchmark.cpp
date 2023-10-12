@@ -44,11 +44,12 @@ int main(int argc, const char* argv[])
         operations = 100000;
     }
 
-    cout << "Testing std::vector";
+    cout << "Testing std::vector...";
     for (int i = 0; i < testRuns; i++) {
-        if ((i % (testRuns / 25)) == 0)
+        if ((testRuns > 25) && ((i % (testRuns / 25)) == 0)) {
             cout << '.';
-        
+        }
+
         start = system_clock::now();
         std::vector<int> v{1, 2, 3, 4, 5};
         for (int j = 0; j < operations; j++) {
@@ -65,10 +66,11 @@ int main(int argc, const char* argv[])
         stlElapsedSeconds += end - start;
     }
 
-    cout << "\nTesting brisk::vector";
+    cout << "\nTesting brisk::vector...";
     for (int i = 0; i < testRuns; i++) {
-        if ((i % (testRuns / 25)) == 0)
+        if ((testRuns > 25) && ((i % (testRuns / 25)) == 0)) {
             cout << '.';
+        }
         
         start = system_clock::now();
         brisk::vector<int> v{1, 2, 3, 4, 5};
