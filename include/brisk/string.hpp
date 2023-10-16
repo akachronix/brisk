@@ -54,6 +54,7 @@ namespace brisk
             m_characters = other.m_characters;
             m_string = new char[m_size];
             memcpy(m_string, other.m_string, m_size);
+            memset(&m_string[m_characters - 1], 0, m_size - m_characters);
         }
 
         string(string&& other)
@@ -94,7 +95,6 @@ namespace brisk
         
         string& operator=(char c)
         {
-            printf("m_size: %u, m_characters: %u\n", m_size, m_characters);
             if (m_size < 2) {
                 realloc(4);
             }

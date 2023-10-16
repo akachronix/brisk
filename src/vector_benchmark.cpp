@@ -14,11 +14,11 @@ static int convertStrToInt(const char* str)
 
 int main(int argc, const char* argv[])
 {
-    brisk::logger cout(brisk::loglevel::everything, "cout.log");
+    brisk::logger cout("cout.log");
 
     using namespace std::chrono;
     time_point<system_clock> start, end;
-    duration<float> briskElapsedSeconds, stlElapsedSeconds;
+    duration<float> briskElapsedSeconds, stlElapsedSeconds = duration<float>::zero();
     int testRuns, operations;
     bool useDefaults = true;
 
@@ -34,7 +34,7 @@ int main(int argc, const char* argv[])
 
             useDefaults = false;
         } catch(std::exception& e) {
-            cout.logError(std::string("Reverting to defaults, error parsing arguments, exception thrown by: ") + std::string(e.what()));
+            cout << "[ERROR]" << e.what() << '\n';
             useDefaults = true;
         }
     }
