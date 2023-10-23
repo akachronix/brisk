@@ -19,7 +19,10 @@ void getStringInfo(brisk::logger& c, const brisk::string& s)
 int main()
 {
     brisk::logger c("string_refactor.log");
-    brisk::string s;
-    c >> s;                 // Wow, this is now possible
-    getStringInfo(c, s);
+
+    brisk::string s, s2, s3;
+    s = "hello, world!";
+    s2 = s;
+    s3 = s2;
+    getStringInfo(c, s3);
 }

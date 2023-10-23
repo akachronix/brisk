@@ -14,17 +14,17 @@ namespace brisk
 	class vector
 	{
 	public:
-		typedef brisk::size_t size_type;
-		typedef Type value_type;
-		typedef Type* pointer;
-		typedef const Type* const_pointer;
-		typedef Type& reference;
-		typedef const Type& const_reference;
-		typedef Type* iterator;
-		typedef const Type* const_iterator;
-		typedef std::reverse_iterator<iterator> reverse_iterator;
-		typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
-		typedef brisk::ptrdiff_t difference_type;
+		using size_type = brisk::size_t;
+		using value_type = Type;
+		using pointer = Type*;
+		using const_pointer = const Type*;
+		using reference = Type&;
+		using const_reference = const Type&;
+		using iterator = Type*;
+		using const_iterator = const Type*;
+		using reverse_iterator = std::reverse_iterator<iterator>;
+		using const_reverse_iterator = std::reverse_iterator<const_iterator>;
+		using difference_type = brisk::ptrdiff_t;
 
 		vector()
 		{

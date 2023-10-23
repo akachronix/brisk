@@ -13,7 +13,7 @@ namespace brisk
 	class logger
 	{
 	public:
-		logger(const char* logfile)
+		logger(brisk::string logfile)
 		{
 			m_logFile = logfile;
 			m_amILogging = true;

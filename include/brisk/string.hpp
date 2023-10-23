@@ -8,9 +8,19 @@
 
 namespace brisk
 {
-    // Forward declared so we can use them with the class
-    brisk::size_t strlen(const char* s);    // DOES NOT include null character
-    brisk::size_t strsize(const char* s);   // DOES include null character
+    brisk::size_t strlen(const char* s)
+    {
+        const char* end = s;
+        for (; *end != '\0'; ++end);
+        return (end - s);
+    }
+
+    brisk::size_t strsize(const char* s)
+    {
+        const char* end = s;
+        for (; *end != '\0'; ++end);
+        return (end - s) + 1;
+    }
 
     class string
     {        
@@ -28,7 +38,7 @@ namespace brisk
             m_size = m_characters << 2;
             m_string = new char[m_size];
             memcpy(m_string, s, m_characters);
-            memset(&m_string[m_characters - 1], 0, m_size - m_characters);
+            memset(&m_string[m_characters], 0, m_size - m_characters);
         }
 
         string(const char c)
@@ -54,7 +64,7 @@ namespace brisk
             m_characters = other.m_characters;
             m_string = new char[m_size];
             memcpy(m_string, other.m_string, m_size);
-            memset(&m_string[m_characters - 1], 0, m_size - m_characters);
+            memset(&m_string[m_characters], 0, m_size - m_characters);
         }
 
         string(string&& other)
@@ -422,23 +432,9 @@ namespace brisk
         return brisk::move(rhs);
     }
 
-    brisk::size_t strlen(const char* s)
-    {
-        const char* end = s;
-        for (; *end != '\0'; ++end);
-        return (end - s);
-    }
-
     brisk::size_t strlen(const brisk::string& s)
     {
         return strlen(s.data());
-    }
-
-    brisk::size_t strsize(const char* s)
-    {
-        const char* end = s;
-        for (; *end != '\0'; ++end);
-        return (end - s) + 1;
     }
 
     brisk::size_t strsize(const brisk::string& s)
