@@ -70,7 +70,7 @@ namespace brisk
 			return *this;
 		}
 
-		brisk::string filename() const noexcept
+		const brisk::string& filename() const noexcept
 		{
 			return m_logFile;
 		}
@@ -115,7 +115,7 @@ namespace brisk
 		{
 			size_t sz = 0;
 			for (brisk::string& it : logHistory) {
-				sz += it.size() + sizeof(brisk::string);
+				sz += it.size();
 			}
 
 			return sz;
@@ -123,12 +123,12 @@ namespace brisk
 
 		void shrink_to_fit()
 		{
-			brisk::string s = "";
+			brisk::string s;
 			for (brisk::string& it : logHistory) {
 				s.append(it);
 			}
 			
-			logHistory.erase(logHistory.begin(), logHistory.end());
+			logHistory.clear();
 			logHistory.emplace_back(s);
 			logHistory.shrink_to_fit();
 		}
@@ -185,43 +185,49 @@ namespace brisk
 	};
 
 	template <class T>
-	logger& operator<<(logger& log, T value)
+	inline logger& operator<<(logger& log, T value)
 	{
 		log.print(value);
 		return log;
 	}
 
-	logger& operator<<(logger& log, logger&(*func)(logger&))
+	inline logger& operator<<(logger& log, logger&(*func)(logger&))
 	{
 		return (*func)(log);
 	}
 
 	template <class T>
-	logger& operator>>(logger& log, T& value)
+	inline logger& operator>>(logger& log, T& value)
 	{
 		log.input(value);
 		return log;
 	}
 
-	logger& newl(logger& log)
+	inline logger& newl(logger& log)
 	{
 		log.print("\n");
 		return log;
 	}
 
-	logger& stab(logger& log)
+	inline logger& flush(logger& log)
+	{
+		std::cout.flush();
+		return log;
+	}
+
+	inline logger& stab(logger& log)
 	{
 		log.print("  ");
 		return log;
 	}
 
-	logger& tab(logger& log)
+	inline logger& tab(logger& log)
 	{
 		log.print("    ");
 		return log;
 	}
 
-	logger& space(logger& log)
+	inline logger& space(logger& log)
 	{
 		log.print(" ");
 		return log;

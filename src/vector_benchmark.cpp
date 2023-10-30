@@ -47,7 +47,7 @@ int main(int argc, const char* argv[])
     cout << "Testing std::vector...";
     for (int i = 0; i < testRuns; i++) {
         if ((testRuns > 25) && ((i % (testRuns / 25)) == 0)) {
-            cout << '.';
+            cout << '.' << brisk::flush;
         }
 
         start = system_clock::now();
@@ -69,7 +69,7 @@ int main(int argc, const char* argv[])
     cout << "\nTesting brisk::vector...";
     for (int i = 0; i < testRuns; i++) {
         if ((testRuns > 25) && ((i % (testRuns / 25)) == 0)) {
-            cout << '.';
+            cout << '.' << brisk::flush;
         }
         
         start = system_clock::now();
