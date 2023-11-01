@@ -25,12 +25,13 @@ int main(int argc, const char* argv[])
     brisk::vector<int> numbas(numbertron * numberOfThreads);
     std::mutex mtx;
 
-    auto workerFunc = [&]() -> float {
+    auto workerFunc = [&mtx, &numbas]() -> float {
         using namespace std::chrono;
         time_point<steady_clock> start = steady_clock::now();
         for (int i = 0; i < numbertron; i++) {
             mtx.lock();
             numbas.emplace_back(i);
+            numbas.clear();
             mtx.unlock();
         }
         time_point<steady_clock> end = steady_clock::now();
