@@ -39,7 +39,7 @@ int main(int argc, const char* argv[])
         return duration_cast<milliseconds>(timeElapsed).count();
     };
 
-    brisk::array<std::future<float>, numberOfThreads> threads;
+    brisk::vector<std::future<float>> threads(numberOfThreads);
     brisk::for_each(threads.begin(), threads.end(), [&workerFunc](std::future<float>& future) {
         future = std::async(workerFunc);
     });

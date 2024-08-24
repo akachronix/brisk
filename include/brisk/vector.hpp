@@ -36,7 +36,7 @@ namespace brisk
 		{
 		}
 		
-		vector(const std::initializer_list<Type> list)
+		vector(const std::initializer_list<Type>&& list)
 			: m_elements(list.size()), m_size(list.size() << 2), m_array(new Type[m_size])
 		{
 			for (typename std::initializer_list<Type>::iterator it = list.begin(); it != list.end(); ++it) {
@@ -207,8 +207,10 @@ namespace brisk
 
 		void pop_back()
 		{
-			m_array[m_elements].~Type();
-			--m_elements;
+			if (m_elements != 0) {
+				m_array[m_elements].~Type();
+				--m_elements;
+			}
 		}
 
 		size_type capacity() const noexcept
@@ -245,7 +247,9 @@ namespace brisk
 
 		void shrink_to_fit()
 		{
-			realloc(m_elements);
+			if ((m_elements * 2) < m_size) {
+				realloc(m_elements);
+			}
 		}
 
 		void fill(const value_type& value) noexcept
@@ -365,30 +369,26 @@ namespace brisk
 	private:
 		void realloc(const size_t newSize)
 		{
-			Type* buffer = new Type[newSize];
-			
 			// If newSize is > current size, we move every object to new buffer
 			if (newSize > m_size) 
 			{
+				Type* buffer = new Type[newSize];
 				for (size_type i = 0; i < m_size; ++i) {
 					buffer[i] = brisk::move(m_array[i]);
 				}
+				
+				delete[] m_array;
+				m_array = buffer;
+				m_size = newSize;
 			} 
 			
-			// However, if newSize is < current size, we only copy up to 
-			// specified index because it's already getting thrown out anyways
+			// Array never "shrinks" however this cuts down on unnecessary
+			// allocations and makes us way way way faster
 			else 
 			{
-				for (size_type i = 0; i < newSize; ++i) {
-					buffer[i] = brisk::move(m_array[i]);
-				}
-
+				erase(begin() + newSize, end());
 				m_elements = newSize;
 			}
-
-			delete[] m_array;
-			m_array = buffer;
-			m_size = newSize;
 		}
 
 	private:
