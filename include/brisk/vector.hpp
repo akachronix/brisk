@@ -66,6 +66,7 @@ namespace brisk
         void fill(const value_type& value) noexcept;
         void clear() noexcept;
         iterator erase(const_iterator pos);
+        iterator erase(const_iterator first, const_iterator last);
 
         // Location helper functions
         reference at(const size_type index);
@@ -94,35 +95,87 @@ namespace brisk
         value_type* m_array;
     };
 
+    /*  All reallocation logic lies here.
+     *
+     *  Value modifying functions check bounds and call for reallocation if
+     *  needed. When realloc is called it's either directly given a size, 
+     *  or is (n << 2) [faster way of multiplying by 4] 
+     */
+    // template <class Type>
+    // void vector<Type>::realloc(const size_t newSize)
+    // {
+    //     if (m_size <= newSize) 
+    //     {
+    //         Type* buffer = new Type[newSize];
+    //         for (size_type i = 0; i < m_elements; ++i) {
+    //             buffer[i] = brisk::move(m_array[i]);
+    //         }
+            
+    //         delete[] m_array;
+    //         m_array = buffer;
+    //         m_size = newSize;
+    //     }
+    // }
     template <class Type>
     void vector<Type>::realloc(const size_t newSize)
     {
-        if (newSize > m_size) 
+        bool reallocate = false;
+        size_t reallocSz = 0;
+
+        if (newSize * 4 < m_size) {
+            reallocSz = m_elements;
+            reallocate = true;
+        }
+
+        if (newSize >= m_size) {
+            reallocSz = newSize;
+            reallocate = true;
+        }
+
+        reallocSz = (reallocSz == 0) ? 4 : reallocSz;
+
+        if (reallocate == true) 
         {
-            Type* buffer = new Type[newSize];
+            Type* buffer = new Type[reallocSz];
             for (size_type i = 0; i < m_elements; ++i) {
-                buffer[i] = m_array[i];
+                buffer[i] = brisk::move(m_array[i]);
             }
             
             delete[] m_array;
             m_array = buffer;
-            m_size = newSize;
-        } 
+            m_size = reallocSz;
+        }
     }
 
+    // Constructors / Destructor
+    // ------------------------------------------------------
+    // vector();
+    // explicit vector(const size_type size);
+    // vector(const std::initializer_list<Type>&& list);
+    // vector(iterator const begin, iterator const end);
+    // vector(const vector& v2);   // Copy constructor
+    // vector(vector&& v2);        // Move constructor
+    // virtual ~vector();
+    // ------------------------------------------------------
     template <class Type>
     vector<Type>::vector()
-        : m_elements(0), m_size(4), m_array(new Type[4])
+        :   m_elements(0), 
+            m_size(4), 
+            m_array(new Type[4])
     {}
     
     template <class Type>
     vector<Type>::vector(const size_type size)
-        : m_elements(0), m_size(size), m_array(new Type[size])
+        :   m_elements(0), 
+            m_size(size), 
+            m_array(new Type[size])
     {}
     
     template <class Type>
     vector<Type>::vector(const std::initializer_list<Type>&& list)
-        : m_elements(list.size()), m_size(list.size() << 2), m_array(new Type[list.size() << 2])
+        :   m_elements(list.size()), 
+            m_size(list.size() << 2), 
+            m_array(new Type[list.size() << 2])
     {
         for (typename std::initializer_list<Type>::iterator it = list.begin(); it != list.end(); ++it) {
             m_array[it - list.begin()] = *(it);
@@ -131,7 +184,8 @@ namespace brisk
     
     template <class Type>
     vector<Type>::vector(iterator const begin, iterator const end)
-        : m_elements(0), m_size(0)
+        :   m_elements(0), 
+            m_size(0)
     {
         for (iterator it = begin; it != end; ++it) {
             m_elements++;
@@ -167,6 +221,13 @@ namespace brisk
         delete[] m_array;
     }
 
+    // Equals operators
+    // ---------------------------------------------------------
+    // vector<Type>& operator=(const vector<Type>& v2);
+    // vector<Type>& operator=(vector&& v2) noexcept;
+    // bool operator==(const vector<Type>& rhs) const noexcept;
+    // bool operator!=(const vector<Type>& rhs) const noexcept;
+    // ---------------------------------------------------------
     template <class Type>
     vector<Type>& vector<Type>::operator=(const vector<Type>& v2)
     {
@@ -228,6 +289,11 @@ namespace brisk
         return false;
     }
 
+    // Array operators
+    // ------------------------------------------------------------------------
+    // reference operator[](const size_type index) noexcept;
+    // const_reference operator[](const size_type index) const noexcept;
+    // ------------------------------------------------------------------------
     template <class Type>
     vector<Type>::reference vector<Type>::operator[](const vector<Type>::size_type index) noexcept {
         return m_array[index];
@@ -238,6 +304,16 @@ namespace brisk
         return m_array[index];
     }
 
+    // Value modifying methods
+    // ------------------------------------------------------------------------
+    // template <class... Args> iterator emplace(iterator pos, Args&&... args);
+    // template <class... Args> void emplace_back(Args&&... args);
+    // void push_back(const std::initializer_list<Type>&& list);
+    // void push_back(const Type& value);
+    // void push_back(const Type&& value);
+    // void pop_back();
+    // void assign(size_type count, const Type& value);
+    // ------------------------------------------------------------------------
     template <class Type>
     template <class... Args>
     vector<Type>::iterator vector<Type>::emplace(typename vector<Type>::iterator pos, Args&&... args)
@@ -250,12 +326,18 @@ namespace brisk
             realloc(m_size << 2);
         }
         
+        // Start from the end, move backwards while moving each element over 1 until
+        // we're at the end. If statement catches when the pos is == to v.begin(),
+        // otherwise memmove would corrupt memory by going out of bounds
         iterator it = this->end();
         for (; it > pos; it--) {
             if (it - 1 < m_array) {
                 break;
             }
+            // it initializes to one past the last element, so start there in that empty space (it)
+            // and move the previous element (it - 1) over sizeof(*it) bytes or the size of one element
             memmove(it, it-1, sizeof(*it));
+            //     dest, src, bytes to copy
         }
 
         *it = brisk::move(brisk::forward<Args>(args)...);
@@ -324,7 +406,7 @@ namespace brisk
     void vector<Type>::assign(size_type count, const Type& value) 
     {
         if (m_size <= count) {
-            realloc(m_size << 2);
+            realloc(count << 2);
         }
 
         for (size_type i = 0; i < count; ++i) {
@@ -334,6 +416,20 @@ namespace brisk
         m_elements += count - m_elements;
     }
 
+    // Size methods / erasure
+    // ----------------------------------------------
+    // size_type capacity() const noexcept;
+    // size_type size() const noexcept;
+    // bool empty() const noexcept;
+    // explicit operator bool() const noexcept;
+    // void resize(const size_type size);
+    // void reserve(const size_type size);
+    // void shrink_to_fit();
+    // void fill(const value_type& value) noexcept;
+    // void clear() noexcept;
+    // iterator erase(const_iterator pos);
+    // iterator erase(const_iterator first, const_iterator last);
+    // ----------------------------------------------
     template <class Type>
     vector<Type>::size_type vector<Type>::capacity() const noexcept {
         return m_size;
@@ -389,6 +485,7 @@ namespace brisk
         
         m_elements = 0;
         m_size = 0;
+        erase(begin(), end());
     }
 
     template <class Type>
@@ -401,6 +498,35 @@ namespace brisk
         return iit;
     }
 
+    template <class Type>
+    vector<Type>::iterator vector<Type>::erase(const_iterator first, const_iterator last) {
+        iterator it = const_cast<iterator>(last-1);
+        for (; it >= first; --it) {
+            erase(it);
+        }
+
+        return it;
+    }
+
+    // Location helper functions
+    // ---------------------------------------------------
+    // reference at(const size_type index);
+    // const_reference at(const size_type index) const;
+    // reference front() noexcept;
+    // const_reference front() const noexcept;
+    // reference back() noexcept;
+    // const_reference back() const noexcept;
+    // pointer data() noexcept;
+    // const_pointer data() const noexcept;
+    // iterator begin() noexcept;
+    // iterator end() noexcept;
+    // const_iterator cbegin() const noexcept;
+    // const_iterator cend() const noexcept;
+    // reverse_iterator rbegin() noexcept;
+    // reverse_iterator rend() noexcept;
+    // const_reverse_iterator crbegin() const noexcept;
+    // const_reverse_iterator crend() const noexcept;
+    // ---------------------------------------------------
     template <class Type>
     vector<Type>::reference vector<Type>::at(const size_type index)
     {
