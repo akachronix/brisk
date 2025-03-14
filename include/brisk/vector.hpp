@@ -5,8 +5,6 @@
 #include <iterator>
 #include <cstring>
 
-#include <iostream>
-
 #include "briskdef.hpp"
 #include "utility.hpp"
 
