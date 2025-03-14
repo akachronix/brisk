@@ -95,27 +95,11 @@ namespace brisk
         value_type* m_array;
     };
 
-    /*  All reallocation logic lies here.
-     *
-     *  Value modifying functions check bounds and call for reallocation if
-     *  needed. When realloc is called it's either directly given a size, 
-     *  or is (n << 2) [faster way of multiplying by 4] 
-     */
-    // template <class Type>
-    // void vector<Type>::realloc(const size_t newSize)
-    // {
-    //     if (m_size <= newSize) 
-    //     {
-    //         Type* buffer = new Type[newSize];
-    //         for (size_type i = 0; i < m_elements; ++i) {
-    //             buffer[i] = brisk::move(m_array[i]);
-    //         }
-            
-    //         delete[] m_array;
-    //         m_array = buffer;
-    //         m_size = newSize;
-    //     }
-    // }
+    // All reallocation logic lies here.
+    // 
+    // Value modifying functions check bounds and call for reallocation if
+    // needed. When realloc is called it's either directly given a size, 
+    // or is (n << 2) [faster way of multiplying by 4]
     template <class Type>
     void vector<Type>::realloc(const size_t newSize)
     {
